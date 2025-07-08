@@ -98,10 +98,6 @@ const ChatInterface: React.FC = () => {
       ],
       general: [
         "Thank you for sharing that with me. I'm here to listen without judgment. Tell me more about what's on your mind.",
-        "I appreciate you opening up. Your feelings are important and valid. How has this been affecting your daily life?",
-        "I'm glad you're here. Sometimes just talking about what we're experiencing can be helpful. What would feel most supportive right now?"
-      ]
-    };
 
     const lowerMessage = userMessage.toLowerCase();
     
