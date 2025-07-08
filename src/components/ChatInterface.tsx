@@ -97,8 +97,10 @@ const ChatInterface: React.FC = () => {
         "Stress affects us all differently. Would you like to explore some coping strategies that might help you feel more balanced?"
       ],
       general: [
-        "Thank you for sharing that with me. I'm here to listen without judgment. Tell me more about what's on your mind.",
-
+        "Thank you for sharing that with me. I'm here to listen without judgment. Tell me more about what's on your mind."
+      ]
+    };
+    
     const lowerMessage = userMessage.toLowerCase();
     
     if (lowerMessage.includes('anxious') || lowerMessage.includes('anxiety') || lowerMessage.includes('worry')) {
