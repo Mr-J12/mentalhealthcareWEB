@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Pause, RotateCcw, Wind } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../hooks/useAuth';
 
 const BreathingExercise: React.FC = () => {
   const [isActive, setIsActive] = useState(false);
@@ -7,6 +9,8 @@ const BreathingExercise: React.FC = () => {
   const [seconds, setSeconds] = useState(4);
   const [cycle, setCycle] = useState(0);
   const [totalCycles, setTotalCycles] = useState(0);
+  const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
+  const { user } = useAuth();
 
   const phases = {
     inhale: { duration: 4, next: 'hold', text: 'Breathe In', color: 'from-blue-400 to-cyan-400' },
@@ -42,18 +46,59 @@ const BreathingExercise: React.FC = () => {
   }, [isActive, phase]);
 
   const toggleBreathing = () => {
-    setIsActive(!isActive);
+    const newIsActive = !isActive;
+    setIsActive(newIsActive);
+    
+    if (newIsActive) {
+      setSessionStartTime(new Date());
+    } else if (sessionStartTime && user) {
+      saveBreathingSession();
+    }
   };
 
   const resetBreathing = () => {
+    if (isActive && sessionStartTime && user) {
+      saveBreathingSession();
+    }
     setIsActive(false);
     setPhase('inhale');
     setSeconds(4);
     setCycle(0);
+    setSessionStartTime(null);
+  };
+
+  const saveBreathingSession = async () => {
+    if (!user || !sessionStartTime) return;
+
+    const durationMinutes = Math.round((new Date().getTime() - sessionStartTime.getTime()) / 60000);
+    
+    try {
+      await supabase
+        .from('breathing_sessions')
+        .insert({
+          user_id: user.id,
+          cycles_completed: cycle,
+          duration_minutes: Math.max(1, durationMinutes)
+        });
+    } catch (error) {
+      console.error('Error saving breathing session:', error);
+    }
   };
 
   const currentPhase = phases[phase];
   const progress = ((currentPhase.duration - seconds) / currentPhase.duration) * 100;
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-full bg-gradient-to-br from-cyan-50 to-blue-50 rounded-2xl">
+        <div className="text-center">
+          <Wind className="w-16 h-16 text-cyan-500 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">Sign in to track your breathing</h3>
+          <p className="text-gray-600">Your breathing sessions will be saved securely</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-2xl p-6 h-full">
@@ -125,15 +170,17 @@ const BreathingExercise: React.FC = () => {
 
       {/* Statistics */}
       <div className="bg-white/70 backdrop-blur-sm rounded-xl p-4">
-        <h3 className="font-semibold text-gray-800 mb-3">Session Stats</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">Current Session</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600">{cycle}</div>
-            <div className="text-sm text-gray-600">Current Cycles</div>
+            <div className="text-sm text-gray-600">Cycles</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-cyan-600">{totalCycles}</div>
-            <div className="text-sm text-gray-600">Total Cycles</div>
+            <div className="text-2xl font-bold text-cyan-600">
+              {sessionStartTime ? Math.round((new Date().getTime() - sessionStartTime.getTime()) / 60000) : 0}
+            </div>
+            <div className="text-sm text-gray-600">Minutes</div>
           </div>
         </div>
       </div>

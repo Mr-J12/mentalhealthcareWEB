@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
-import { MessageCircle, TrendingUp, Wind, Shield, Book, Menu, X, Heart } from 'lucide-react';
+import { MessageCircle, TrendingUp, Wind, Shield, Book, Menu, X, Heart, LogOut, User } from 'lucide-react';
 import ChatInterface from './components/ChatInterface';
 import MoodTracker from './components/MoodTracker';
 import BreathingExercise from './components/BreathingExercise';
 import CrisisSupport from './components/CrisisSupport';
 import ResourceLibrary from './components/ResourceLibrary';
+import AuthModal from './components/AuthModal';
+import { useAuth } from './hooks/useAuth';
 
 type ActiveTab = 'chat' | 'mood' | 'breathing' | 'crisis' | 'resources';
 
 function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('chat');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const { user, loading, signOut } = useAuth();
 
   const tabs = [
     { id: 'chat', name: 'Chat', icon: MessageCircle, component: ChatInterface },
@@ -21,6 +25,21 @@ function App() {
   ];
 
   const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component || ChatInterface;
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading MindfulBot...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
@@ -39,25 +58,51 @@ function App() {
             </div>
             
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex space-x-1">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                return (
+            <div className="hidden md:flex items-center gap-4">
+              <nav className="flex space-x-1">
+                {tabs.map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id as ActiveTab)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                        activeTab === tab.id
+                          ? 'bg-blue-500 text-white shadow-lg'
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {tab.name}
+                    </button>
+                  );
+                })}
+              </nav>
+              
+              {/* User Menu */}
+              {user ? (
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                    <User className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm text-gray-700">{user.email}</span>
+                  </div>
                   <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id as ActiveTab)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                      activeTab === tab.id
-                        ? 'bg-blue-500 text-white shadow-lg'
-                        : 'text-gray-600 hover:bg-gray-100'
-                    }`}
+                    onClick={handleSignOut}
+                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="Sign out"
                   >
-                    <Icon className="w-4 h-4" />
-                    {tab.name}
+                    <LogOut className="w-4 h-4" />
                   </button>
-                );
-              })}
-            </nav>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsAuthModalOpen(true)}
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                >
+                  Sign In
+                </button>
+              )}
+            </div>
 
             {/* Mobile Menu Button */}
             <button
@@ -72,7 +117,7 @@ function App() {
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
           <div className="md:hidden bg-white/95 backdrop-blur-sm border-t border-gray-200">
-            <nav className="px-4 py-2 space-y-1">
+            <nav className="px-4 py-2 space-y-1 border-b border-gray-200">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
@@ -94,6 +139,35 @@ function App() {
                 );
               })}
             </nav>
+            
+            {/* Mobile User Menu */}
+            <div className="px-4 py-3">
+              {user ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <User className="w-4 h-4" />
+                    {user.email}
+                  </div>
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center gap-2 text-sm text-red-600 hover:text-red-700"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    setIsAuthModalOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                >
+                  Sign In
+                </button>
+              )}
+            </div>
           </div>
         )}
       </header>
@@ -118,6 +192,12 @@ function App() {
           </div>
         </div>
       </footer>
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+      />
     </div>
   );
 }
