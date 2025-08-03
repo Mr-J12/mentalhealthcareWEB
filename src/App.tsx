@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { MessageCircle, TrendingUp, Wind, Shield, Book, Menu, X, Heart, LogOut, User } from 'lucide-react';
 import ChatInterface from './components/ChatInterface';
 import MoodTracker from './components/MoodTracker';
