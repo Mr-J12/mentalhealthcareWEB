@@ -17,6 +17,31 @@ export const useAuth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setUser(session?.user ?? null);
+        
+        // If user is authenticated, ensure they have an entry in the users table
+        if (session?.user) {
+          const { data: existingUser } = await supabase
+            .from('users')
+            .select('id')
+            .eq('id', session.user.id)
+            .single();
+          
+          // If no entry exists, create one
+          if (!existingUser) {
+            const { error: profileError } = await supabase
+              .from('users')
+              .insert({
+                id: session.user.id,
+                email: session.user.email,
+                full_name: session.user.user_metadata?.full_name || null,
+              });
+            
+            if (profileError) {
+              console.error('Error creating user profile on auth change:', profileError);
+            }
+          }
+        }
+        
         setLoading(false);
       }
     );
