@@ -14,6 +14,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const { signUp, signIn } = useAuth();
 
@@ -21,16 +22,26 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
 
     try {
       if (isSignUp) {
         const { error } = await signUp(email, password, fullName);
         if (error) throw error;
+        setSuccess('Verification email has been sent to your email');
+        // Don't close modal immediately for sign up to show success message
+        setTimeout(() => {
+          onClose();
+        }, 2000);
       } else {
         const { error } = await signIn(email, password);
         if (error) throw error;
+        setSuccess('Successfully logged in');
+        // Close modal after brief delay to show success message
+        setTimeout(() => {
+          onClose();
+        }, 1000);
       }
-      onClose();
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
@@ -127,6 +138,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3">
               <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
+          {success && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <p className="text-sm text-green-600">{success}</p>
             </div>
           )}
 
