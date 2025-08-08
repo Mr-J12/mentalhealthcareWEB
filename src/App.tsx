@@ -27,7 +27,9 @@ function App() {
   const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component || ChatInterface;
 
   const handleSignOut = async () => {
-    await signOut();
+    if (window.confirm('Are you sure you want to sign out?')) {
+      await signOut();
+    }
   };
 
   // Removed loading interface block here
