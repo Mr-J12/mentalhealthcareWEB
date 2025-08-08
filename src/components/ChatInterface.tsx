@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, MessageCircle, Heart } from 'lucide-react';
+import { Send, Heart } from 'lucide-react';
 import { supabase, ChatMessage } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 
@@ -19,13 +19,7 @@ const ChatInterface: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
-  useEffect(() => {
-    if (user) {
-      loadMessages();
-    }
-  }, [user]);
-
-  const loadMessages = async () => {
+  const loadMessages = React.useCallback(async () => {
     if (!user) return;
 
     try {
@@ -55,7 +49,13 @@ const ChatInterface: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadMessages();
+    }
+  }, [user, loadMessages]);
 
   const saveMessage = async (content: string, isUserMessage: boolean) => {
     if (!user) return null;

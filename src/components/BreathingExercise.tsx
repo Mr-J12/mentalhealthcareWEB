@@ -8,15 +8,15 @@ const BreathingExercise: React.FC = () => {
   const [phase, setPhase] = useState<'inhale' | 'hold' | 'exhale'>('inhale');
   const [seconds, setSeconds] = useState(4);
   const [cycle, setCycle] = useState(0);
-  const [totalCycles, setTotalCycles] = useState(0);
+  const [, setTotalCycles] = useState(0);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const { user } = useAuth();
 
-  const phases = {
+  const phases = React.useMemo(() => ({
     inhale: { duration: 4, next: 'hold', text: 'Breathe In', color: 'from-blue-400 to-cyan-400' },
     hold: { duration: 4, next: 'exhale', text: 'Hold', color: 'from-purple-400 to-pink-400' },
     exhale: { duration: 6, next: 'inhale', text: 'Breathe Out', color: 'from-green-400 to-emerald-400' }
-  };
+  }), []);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -43,7 +43,7 @@ const BreathingExercise: React.FC = () => {
     }
 
     return () => clearInterval(interval);
-  }, [isActive, phase]);
+  }, [isActive, phase, phases]);
 
   const toggleBreathing = () => {
     const newIsActive = !isActive;

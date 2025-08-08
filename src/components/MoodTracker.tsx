@@ -12,29 +12,29 @@ const MoodTracker: React.FC = () => {
   const { user } = useAuth();
 
   React.useEffect(() => {
+    const loadMoodHistory = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('mood_entries')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setMoodHistory(data || []);
+      } catch (error) {
+        console.error('Error loading mood history:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (user) {
       loadMoodHistory();
     }
   }, [user]);
-
-  const loadMoodHistory = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('mood_entries')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setMoodHistory(data || []);
-    } catch (error) {
-      console.error('Error loading mood history:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const moodOptions = [
     { value: 1, label: 'Very Low', icon: Frown, color: 'text-red-500', bg: 'bg-red-50' },
@@ -181,7 +181,7 @@ const MoodTracker: React.FC = () => {
       <div className="bg-white/70 backdrop-blur-sm rounded-xl p-4">
         <h3 className="font-semibold text-gray-800 mb-3">Recent Entries</h3>
         <div className="space-y-3 max-h-40 overflow-y-auto">
-          {moodHistory.slice(0, 5).map((entry, index) => {
+          {moodHistory.slice(0, 5).map((entry) => {
             const mood = moodOptions.find(m => m.value === entry.mood_level);
             const Icon = mood?.icon || Meh;
             return (
